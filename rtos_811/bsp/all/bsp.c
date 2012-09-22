@@ -1,4 +1,6 @@
 #include <bsp.h>
+#include <types.h>
+#include <LM3Sxxx.h>
 
 static  void  tickInit (void)
 {
@@ -7,7 +9,7 @@ static  void  tickInit (void)
     SysTickIntEnable();
 }
 
-void  targetInit (void)
+void BSP_Init(void)
 {
 #if PLL_EN == 0
     /*  Not use PLL  ≤ª π”√PLL      */
@@ -25,4 +27,14 @@ void  targetInit (void)
 
     /*  Initialize the uC/OS-II tick*/
     tickInit();
+}
+
+int32_t bsp_getchar(void)
+{
+    return 0;
+}
+
+void bsp_putchar(char_t c)
+{
+
 }

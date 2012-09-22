@@ -69,7 +69,7 @@ SECTIONS
     } > SRAM
     
 	 heap_low = .; /* for _sbrk */
-     . = . + 0x400; /* 1kB of heap memory */
+     . = . + 0x200; /* 1kB of heap memory */
      heap_top = .; /* for _sbrk */
 
 

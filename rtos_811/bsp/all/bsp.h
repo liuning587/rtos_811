@@ -15,5 +15,6 @@
 #define  PLL_EN             0                   /* 1：Enable PLL  使能PLL   */
 #define  CCLK_DIV           SYSCTL_SYSDIV_1     /* CCLK divider CCLK分频系数 */
 
+extern void BSP_Init(void);
 
 #endif /* __BSP_H__ */
