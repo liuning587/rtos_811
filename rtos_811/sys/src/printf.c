@@ -9,7 +9,7 @@
 #include <stdarg.h>
 #include <types.h>
 
-#define MAXBUF 100
+#define MAXBUF 80
 
 extern void bsp_putchar(char_t c);
 static inline int
