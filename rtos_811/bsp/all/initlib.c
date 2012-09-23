@@ -39,7 +39,10 @@ static void IntDefaultHandler(void);
 //
 //*****************************************************************************
 extern int main(void);
-
+extern void  EXC_ENTER_HARD_FAULT(void);
+extern void  EXC_ENTER_MEM_FAULT(void);
+extern void  EXC_ENTER_BUS_FAULT(void);
+extern void  EXC_ENTER_USAGE_FAULT(void);
 //*****************************************************************************
 //
 // Reserve space for the system stack.
@@ -59,19 +62,25 @@ void (* const g_pfnVectors[])(void) =
                                             // The initial stack pointer
     ResetISR,                               // The reset handler
     NmiSR,                                  // The NMI handler
+#if 0
     FaultISR,                               // The hard fault handler
     IntDefaultHandler,                      // The MPU fault handler
     IntDefaultHandler,                      // The bus fault handler
     IntDefaultHandler,                      // The usage fault handler
+#endif
+    EXC_ENTER_HARD_FAULT,
+    EXC_ENTER_MEM_FAULT,
+    EXC_ENTER_BUS_FAULT,
+    EXC_ENTER_USAGE_FAULT,
     0,                                      // Reserved
     0,                                      // Reserved
     0,                                      // Reserved
     0,                                      // Reserved
-    OS_CPU_PendSVHandler,                   // SVCall handler
-    OS_CPU_SysTickHandler,                  // Debug monitor handler
+    IntDefaultHandler,                      // SVCall handler
+    IntDefaultHandler,                      // Debug monitor handler
     0,                                      // Reserved
-    IntDefaultHandler,                      // The PendSV handler
-    IntDefaultHandler,                      // The SysTick handler
+    OS_CPU_PendSVHandler,                   // The PendSV handler
+    OS_CPU_SysTickHandler,                  // The SysTick handler
     IntDefaultHandler,                      // GPIO Port A
     IntDefaultHandler,                      // GPIO Port B
     IntDefaultHandler,                      // GPIO Port C

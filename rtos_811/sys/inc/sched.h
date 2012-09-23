@@ -31,7 +31,7 @@ typedef struct clock
     struct timespec timeBase;		/* time set */
 } CLOCK;
 
-
+#define WAIT_FOREVER  ((uint32_t)0)
 /*------------------------------------------------------------------------------
 Section: Globals
 ------------------------------------------------------------------------------*/

@@ -12,9 +12,10 @@
  *  If PLL_EN>0, CCLK=200MHz/CCLK_DIV, CCLK must <=20MHZ/50MHz
  */
 #define  EXT_CLK            SYSCTL_XTAL_6MHZ    /* external clock 外部时钟      */
-#define  PLL_EN             0                   /* 1：Enable PLL  使能PLL   */
+#define  PLL_EN             1                   /* 1：Enable PLL  使能PLL   */
 #define  CCLK_DIV           SYSCTL_SYSDIV_1     /* CCLK divider CCLK分频系数 */
 
+extern void BSP_IntDisAll(void);
 extern void BSP_Init(void);
 
 #endif /* __BSP_H__ */

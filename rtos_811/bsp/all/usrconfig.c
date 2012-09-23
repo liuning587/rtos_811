@@ -12,9 +12,9 @@ extern void sys_start(void);
  */
 int main(void)
 {
-    //BSP_IntDisAll();
+    BSP_IntDisAll();    /* Disable all the interrupts   */
 
-    sys_start();    /* never return */
+    sys_start();        /* never return */
 
     return 0;
 }

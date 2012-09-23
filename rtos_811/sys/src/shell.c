@@ -110,7 +110,7 @@ static int32_t match_cmd(char_t *buf, int32_t len)
         {
             pcmd++;
         }
-    } while (pcmd++ != pmatch_cmd);
+    } while (pcmd != pmatch_cmd);
 
     return -2;
 }
@@ -138,14 +138,14 @@ static bool_e readline(void)
         case '\r': // 回车
         case '\n': // 换行，命令结束输入
             p[n] = '\0';
-            printchar('\n');
-             pmatch_cmd = NULL;
+             printf ("\r\n");
+            pmatch_cmd = NULL;
             return TRUE;
 
         case 0x03: // Ctrl + C
             // 清空缓冲区
             console_buffer[0] = '\0';
-            printchar('\n');
+            printf("\r\n");
             return FALSE;
 
         case 0x08: //退格键
