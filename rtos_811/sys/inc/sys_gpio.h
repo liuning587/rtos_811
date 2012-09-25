@@ -3,8 +3,8 @@
 #include <types.h>
 
 /* IO不同类型状态，也许需要根据不同板子用宏定义做相应调整 */
-#define E_LED_ON                        0    /* LED点亮              */
-#define E_LED_OFF                       1    /* LED熄灭              */
+#define E_LED_ON                        1    /* LED点亮              */
+#define E_LED_OFF                       0    /* LED熄灭              */
 #define E_POWER_OFF                     1    /* 电源关闭             */
 #define E_POWER_ON                      0    /* 电源打开             */
 

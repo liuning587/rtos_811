@@ -200,7 +200,7 @@ NmiSR(void)
     {
     }
 }
-
+#if 0
 //*****************************************************************************
 //
 // This is the code that gets called when the processor receives a fault
@@ -218,7 +218,7 @@ FaultISR(void)
     {
     }
 }
-
+#endif
 //*****************************************************************************
 //
 // This is the code that gets called when the processor receives an unexpected
