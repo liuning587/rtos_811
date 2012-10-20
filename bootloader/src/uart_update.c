@@ -83,6 +83,13 @@ STATUS uart_update(void)
                                | (data[1] << 16)
                                | (data[2] <<  8)
                                |  data[3];
+                /* 起始地址必须为0，由各BootLoader自行决定写入位置 */
+                if (startAddress != 0u)
+                {
+                    status = COMMAND_RET_INVALID_CMD;
+                    break;
+                }
+                startAddress = APP_START_ADDRESS;
                 // 下载字节数
                 transferSize = (data[4] << 24)
                                | (data[5] << 16)
