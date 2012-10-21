@@ -57,7 +57,6 @@ void rootTask()
     excInit();
     //”√ªß≥Ã–Ú
     usrAppInit();
-
 }
 int main (void)
 {

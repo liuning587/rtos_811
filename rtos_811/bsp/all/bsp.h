@@ -18,7 +18,7 @@
 
 #define NUM_TTY             1   /* TTY个数 */
 #define CONSOLE_TTY         0   /* 终端TTY */
-#define ROOTSTACKSIZE    1000   /* root根任务栈 */
+#define ROOTSTACKSIZE     200   /* root根任务栈 */
 
 extern uint32_t consoleFd;      /* fd of initial console device */
 extern uint8_t consoleName[5];  /* console device name, eg. "ttyc0" */
