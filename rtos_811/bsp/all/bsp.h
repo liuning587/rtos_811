@@ -3,6 +3,7 @@
 
 #include <ucos_ii.h>
 #include <LM3Sxxx.h>
+#include <types.h>
 
 /**
  *  System Clock(CCLK) Setting   系统时钟(CCLK) 设定
@@ -15,7 +16,11 @@
 #define  PLL_EN             1                   /* 1：Enable PLL  使能PLL   */
 #define  CCLK_DIV           SYSCTL_SYSDIV_1     /* CCLK divider CCLK分频系数 */
 
-extern void BSP_IntDisAll(void);
-extern void BSP_Init(void);
+#define NUM_TTY             1   /* TTY个数 */
+#define CONSOLE_TTY         0   /* 终端TTY */
+#define ROOTSTACKSIZE    1000   /* root根任务栈 */
+
+extern uint32_t consoleFd;      /* fd of initial console device */
+extern uint8_t consoleName[5];  /* console device name, eg. "ttyc0" */
 
 #endif /* __BSP_H__ */

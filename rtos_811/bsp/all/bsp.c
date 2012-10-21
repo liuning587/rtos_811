@@ -1,10 +1,68 @@
+#include <string.h>
 #include <bsp.h>
 #include <types.h>
 #include <maths.h>
 #include <LM3Sxxx.h>
+#include "lm811uart.h"
+#include <intlib.h>
 
 #include <sys_gpio.h>
 
+#define NUM_TTY         1
+#if 0
+#define CONSOLE_TTY     0
+uint32_t consoleFd;      /* fd of initial console device */
+uint8_t consoleName[5];    /* console device name, eg. "ttyc0" */
+#endif
+/*UART口的定义*/
+typedef struct
+{
+    uint32_t  base;
+    uint32_t  ttyno;
+    uint32_t  intid;
+
+} uart_param_t;
+// 串口Channel
+static LM811_CHAN lm811UartChan[NUM_TTY];
+
+// UART口的参数表
+static const uart_param_t uartParas[] =
+{
+    {UART0_BASE, 0, INT_UART0},
+    //{UART1_BASE, 1, INT_UART1},
+};
+
+void sysSerialHwInit(void)
+{
+    uint32_t i;
+
+    for (i = 0; i < ARRAY_SIZE(lm811UartChan); i++)
+    {
+        lm811UartChan[i].baseregs = uartParas[i].base;
+        lm811UartChan[i].ttyno = uartParas[i].ttyno;
+        lm811UartDevInit(&lm811UartChan[i]);
+    }
+}
+void sysSerialHwInit2(void)
+{
+    uint32_t i;
+    // 串口
+    for (i = 0; i < ARRAY_SIZE(lm811UartChan); i++){
+        intConnect(uartParas[i].intid, lm811UartInt, (uint32_t)&lm811UartChan[i]);
+        intEnable(uartParas[i].intid);
+    }
+}
+/* serial channel */
+SIO_CHAN* sysSerialChanGet(int32_t channel)
+{
+    int32_t size = ARRAY_SIZE(lm811UartChan);
+
+    if (channel < size)
+    {
+        return (SIO_CHAN *)&lm811UartChan[channel];
+    }
+    return NULL;
+}
 
 /*IO_MAP的定义*/
 typedef struct
@@ -121,7 +179,7 @@ bsp_gpio_init(void)
 
     sys_gpio_bspInstall(bsp_gpio_cfg, bsp_gpio_read, bsp_gpio_write);
 }
-
+#if 0
 static void bsp_uart_init(void)
 {
     SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
@@ -138,16 +196,21 @@ static void tickInit (void)
     SysTickEnable();
     SysTickIntEnable();
 }
+
 void BSP_IntDisAll(void)
 {
     //IntMasterDisable();
 }
+#endif
 void bsp_reboot(void)
 {
     SysCtlReset();
 }
-void BSP_Init(void)
+
+void sysHwInit0(void)
 {
+    intLock();
+
 #if PLL_EN == 0
     /*  Not use PLL  不使用PLL      */
     SysCtlClockSet(CCLK_DIV
@@ -161,12 +224,33 @@ void BSP_Init(void)
             | SYSCTL_OSC_MAIN
             | EXT_CLK);
 #endif
-    bsp_uart_init();
-    bsp_gpio_init();
-    /*  Initialize the uC/OS-II tick*/
-    tickInit();
-}
 
+    intLibInit();
+
+    //系统IO初始化
+    bsp_gpio_init();
+
+    //系统串口初始化
+    sysSerialHwInit();
+
+    intUnlock();
+
+}
+void  sysHwInit ()
+{
+    sysSerialHwInit2();
+}
+void sysHwInit2()
+{
+    //gpio_init(true);
+
+#ifdef INCLUDE_DATAFLASH
+    ftlInit();
+#endif
+
+
+}
+#if 0
 int32_t bsp_getchar(void)
 {
     int32_t c;
@@ -180,4 +264,9 @@ int32_t bsp_getchar(void)
 void bsp_putchar(char_t c)
 {
     UARTCharPut(UART0_BASE, c);
+}
+#endif
+void bsp_feeddog(void)
+{
+
 }

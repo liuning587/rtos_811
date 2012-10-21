@@ -14,9 +14,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <sched.h>
+#include <ttylib.h>
 
-extern int32_t bsp_getchar(void);
-extern void printchar(char c);  /* 今后要换为tty设备 */
+
+extern int32_t   consoleFd;      /* fd of initial console device */
+extern uint8_t   consoleName[5];    /* console device name, eg. "ttyc0" */
+//extern int32_t bsp_getchar(void);
+//extern void printchar(char c);  /* 今后要换为tty设备 */
 
 static uint8_t console_buffer[CFG_CBSIZE]; /* console I/O buffer   */
 static const char_t erase_seq[] = "\b \b";
@@ -130,7 +134,8 @@ static bool_e readline(void)
     {
         taskDelay(1);
         // 检测输入
-        if ((c = bsp_getchar()) == 0)
+        //if ((c = bsp_getchar()) == 0)
+        if(ttyRead(consoleFd, &c, 1) == 0)
             continue;
         // 处理输入字符
         switch (c)

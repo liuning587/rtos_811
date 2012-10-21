@@ -8,10 +8,12 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <types.h>
+#include <ttylib.h>
 
 #define MAXBUF 80
 
 extern void bsp_putchar(char_t c);
+extern uint32_t consoleFd;
 static inline int
 isdigit(int ch)
 {
@@ -28,7 +30,7 @@ unsigned int skip_atou(const char **s)
 }
 
 
-static const char * const g_pcHex = "0123456789abcdef";
+//static const char * const g_pcHex = "0123456789abcdef";
 
 /**
  * @brief  Transmit a char, if you want to use printf(), 
@@ -39,12 +41,24 @@ static const char * const g_pcHex = "0123456789abcdef";
  */
 void printchar(char c)
 {
+#if 1
+    if((c) == '\n'){
+        char ch = '\r';
+        ttyWrite(consoleFd,(uint8_t* )&ch,1);
+        ttyWrite(consoleFd,(uint8_t* )&c,1);
+    }
+    else
+#endif
+        ttyWrite(consoleFd,(uint8_t* )&c,1);
+
+#if 0
     if (c == '\n')
     {
         printchar('\r');
     }
 
     bsp_putchar((unsigned char)c);
+#endif
 }
 
 void printstring(const char *pcString,int len)
