@@ -8,12 +8,6 @@
 
 #include <sys_gpio.h>
 
-#define NUM_TTY         1
-#if 0
-#define CONSOLE_TTY     0
-uint32_t consoleFd;      /* fd of initial console device */
-uint8_t consoleName[5];    /* console device name, eg. "ttyc0" */
-#endif
 /*UART口的定义*/
 typedef struct
 {
@@ -29,7 +23,7 @@ static LM811_CHAN lm811UartChan[NUM_TTY];
 static const uart_param_t uartParas[] =
 {
     {UART0_BASE, 0, INT_UART0},
-    //{UART1_BASE, 1, INT_UART1},
+    {UART1_BASE, 1, INT_UART1},
 };
 
 void sysSerialHwInit(void)
@@ -178,30 +172,15 @@ bsp_gpio_init(void)
     }
 
     sys_gpio_bspInstall(bsp_gpio_cfg, bsp_gpio_read, bsp_gpio_write);
-}
-#if 0
-static void bsp_uart_init(void)
-{
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
+
+    /* 设置uart0、1模式 */
     GPIOPinTypeUART(GPIO_PORTA_BASE, GPIO_PIN_0 | GPIO_PIN_1);
     SysCtlPeripheralEnable(SYSCTL_PERIPH_UART0);
-    UARTConfigSetExpClk(UART0_BASE, SysCtlClockGet(), 115200,
-            UART_CONFIG_WLEN_8 | UART_CONFIG_STOP_ONE | UART_CONFIG_PAR_NONE);
-    UARTEnable(UART0_BASE);
+    GPIOPinTypeUART(GPIO_PORTD_BASE, GPIO_PIN_2 | GPIO_PIN_3);
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_UART1);
+
 }
 
-static void tickInit (void)
-{
-    SysTickPeriodSet((INT32U)(SysCtlClockGet() / OS_TICKS_PER_SEC) -1 );
-    SysTickEnable();
-    SysTickIntEnable();
-}
-
-void BSP_IntDisAll(void)
-{
-    //IntMasterDisable();
-}
-#endif
 void bsp_reboot(void)
 {
     SysCtlReset();

@@ -16,7 +16,7 @@
 #define  PLL_EN             1                   /* 1：Enable PLL  使能PLL   */
 #define  CCLK_DIV           SYSCTL_SYSDIV_1     /* CCLK divider CCLK分频系数 */
 
-#define NUM_TTY             1   /* TTY个数 */
+#define NUM_TTY             2   /* TTY个数 */
 #define CONSOLE_TTY         0   /* 终端TTY */
 #define ROOTSTACKSIZE     200   /* root根任务栈 */
 
