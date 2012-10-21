@@ -32,7 +32,7 @@
 //*****************************************************************************
 void ResetISR(void);
 static void NmiSR(void);
-static void FaultISR(void);
+//static void FaultISR(void);
 static void IntDefaultHandler(void);
 static void dummy(void);
 static void intHandler(uint32_t int_num);
