@@ -19,6 +19,10 @@ extern void  OSStatInit (void);
 uint32_t consoleFd;      /* fd of initial console device */
 uint8_t consoleName[5];    /* console device name, eg. "ttyc0" */
 
+const char_t* the_rtos_logo =
+        " \\|/\n"
+        "--O-- The CM3 RTOS is starting...\n"
+        " /|\\\n";
 
 static uint32_t rootstack[ROOTSTACKSIZE / 4];
 
@@ -55,6 +59,7 @@ void rootTask()
     sysHwInit2();
     shellInit();
     excInit();
+    printf(the_rtos_logo);
     //”√ªß≥Ã–Ú
     usrAppInit();
 }
