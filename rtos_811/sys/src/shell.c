@@ -184,7 +184,7 @@ static bool_e readline(void)
                 printf("\a");//超出命令最大字节数响铃
                 continue;
             }
-            printchar(c);
+            printf("%c", c);
             // 保存到缓冲区
             p[n] = c;
             n++;

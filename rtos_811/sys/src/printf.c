@@ -1,4 +1,3 @@
-#if 1
 /**************************************************************************//*****
  * @file     printf.c
  * @brief    Implementation of several stdio.h methods, such as printf(), 
@@ -10,356 +9,29 @@
 #include <types.h>
 #include <ttylib.h>
 
-#define MAXBUF 80
-
-extern void bsp_putchar(char_t c);
+#undef putchar(x)
+int putchar(int c)
+{
 extern uint32_t consoleFd;
-static inline int
-isdigit(int ch)
-{
-  return (ch >= '0') && (ch <= '9');
-}
-
-unsigned int skip_atou(const char **s)
-{
-  int i=0;
-
-  while (isdigit(**s))
-    i = i*10 + *((*s)++) - '0';
-  return i;
-}
-
-
-//static const char * const g_pcHex = "0123456789abcdef";
-
-/**
- * @brief  Transmit a char, if you want to use printf(), 
- *         you need implement this function
- *
- * @param  pStr	Storage string.
- * @param  c    Character to write.
- */
-void printchar(char c)
-{
 #if 1
     if((c) == '\n'){
         char ch = '\r';
-        ttyWrite(consoleFd,(uint8_t* )&ch,1);
-        ttyWrite(consoleFd,(uint8_t* )&c,1);
+        ttyWrite(consoleFd, (uint8_t* )&ch, 1);
+        ttyWrite(consoleFd, (uint8_t* )&c, 1);
     }
     else
 #endif
-        ttyWrite(consoleFd,(uint8_t* )&c,1);
+        ttyWrite(consoleFd, (uint8_t* )&c, 1);
 
 #if 0
+extern void bsp_putchar(char_t c);
     if (c == '\n')
     {
-        printchar('\r');
+        bsp_putchar('\r');
     }
 
     bsp_putchar((unsigned char)c);
 #endif
-}
-
-void printstring(const char *pcString,int len)
-{
-    int i;
-    for (i = 0 ; i < len ;i++)
-    {
-       printchar(*pcString);
-       pcString++;
-    }
-}
-
-static int strnlen(const char *s, int maxlen)
-{
-  const char *es = s;
-  while ( *es && maxlen ) {
-    es++; maxlen--;
-  }
-
-  return (es-s);
-}
-
-#define ZEROPAD    1        /* pad with zero */
-#define SIGN    2        /* unsigned/signed long */
-#define PLUS    4        /* show plus */
-#define SPACE    8        /* space if plus */
-#define LEFT    16        /* left justified */
-#define SPECIAL    32        /* 0x */
-#define LARGE    64        /* use 'ABCDEF' instead of 'abcdef' */
-
-#define do_div(n,base) ({ \
-int __res; \
-__res = ((unsigned long) n) % (unsigned) base; \
-n = ((unsigned long) n) / (unsigned) base; \
-__res; })
-
-static char * number(char * str, long num, int base, int size, int precision
-    ,int type)
-{
-  char c,sign,tmp[66];
-  const char *digits="0123456789abcdefghijklmnopqrstuvwxyz";
-  int i;
-
-  if (type & LARGE)
-    digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  if (type & LEFT)
-    type &= ~ZEROPAD;
-  if (base < 2 || base > 36)
-    return 0;
-  c = (type & ZEROPAD) ? '0' : ' ';
-  sign = 0;
-  if (type & SIGN) {
-    if (num < 0) {
-      sign = '-';
-      num = -num;
-      size--;
-    } else if (type & PLUS) {
-      sign = '+';
-      size--;
-    } else if (type & SPACE) {
-      sign = ' ';
-      size--;
-    }
-  }
-  if (type & SPECIAL) {
-    if (base == 16)
-      size -= 2;
-    else if (base == 8)
-      size--;
-  }
-  i = 0;
-  if (num == 0)
-    tmp[i++]='0';
-  else while (num != 0)
-    tmp[i++] = digits[do_div(num,base)];
-  if (i > precision)
-    precision = i;
-  size -= precision;
-  if (!(type&(ZEROPAD+LEFT)))
-    while(size-- > 0)
-      *str++ = ' ';
-  if (sign)
-    *str++ = sign;
-  if (type & SPECIAL) {
-    if (base==8)
-      *str++ = '0';
-    else if (base==16) {
-      *str++ = '0';
-      *str++ = digits[33];
-    }
-  }
-  if (!(type & LEFT))
-    while (size-- > 0)
-      *str++ = c;
-  while (i < precision--)
-    *str++ = '0';
-  while (i-- > 0)
-    *str++ = tmp[i];
-  while (size-- > 0)
-    *str++ = ' ';
-  return str;
-}
-
-/* Forward decl. needed for IP address printing stuff... */
-int sprintf(char * buf, const char *fmt, ...);
-
-int vsprintf(char *buf, const char *fmt, va_list args)
-{
-  int len;
-  unsigned long num;
-  int i, base;
-  char * str;
-  const char *s;
-
-  int flags;        /* flags to number() */
-
-  int field_width;    /* width of output field */
-  int precision;        /* min. # of digits for integers; max
-                   number of chars for from string */
-  int qualifier;        /* 'h', 'l', or 'L' for integer fields */
-
-  for (str=buf ; *fmt ; ++fmt) {
-    if((str-buf) > MAXBUF)
-        break;
-    if (*fmt != '%') {
-      *str++ = *fmt;
-      continue;
-    }
-
-    /* process flags */
-    flags = 0;
-  repeat:
-    ++fmt;        /* this also skips first '%' */
-    switch (*fmt) {
-    case '-': flags |= LEFT; goto repeat;
-    case '+': flags |= PLUS; goto repeat;
-    case ' ': flags |= SPACE; goto repeat;
-    case '#': flags |= SPECIAL; goto repeat;
-    case '0': flags |= ZEROPAD; goto repeat;
-    }
-
-    /* get field width */
-    field_width = -1;
-    if (isdigit(*fmt))
-      field_width = skip_atou(&fmt);
-    else if (*fmt == '*') {
-      ++fmt;
-      /* it's the next argument */
-      field_width = va_arg(args, int);
-      if (field_width < 0) {
-    field_width = -field_width;
-    flags |= LEFT;
-      }
-    }
-
-    /* get the precision */
-    precision = -1;
-    if (*fmt == '.') {
-      ++fmt;
-      if (isdigit(*fmt))
-    precision = skip_atou(&fmt);
-      else if (*fmt == '*') {
-    ++fmt;
-    /* it's the next argument */
-    precision = va_arg(args, int);
-      }
-      if (precision < 0)
-    precision = 0;
-    }
-
-    /* get the conversion qualifier */
-    qualifier = -1;
-    if (*fmt == 'h' || *fmt == 'l' || *fmt == 'L') {
-      qualifier = *fmt;
-      ++fmt;
-    }
-
-    /* default base */
-    base = 10;
-
-    switch (*fmt) {
-    case 'c':
-      if (!(flags & LEFT))
-    while (--field_width > 0)
-      *str++ = ' ';
-      *str++ = (unsigned char) va_arg(args, int);
-      while (--field_width > 0)
-    *str++ = ' ';
-      continue;
-
-    case 's':
-      s = va_arg(args, char *);
-      len = strnlen(s, precision);
-
-      if (!(flags & LEFT))
-    while (len < field_width--)
-      *str++ = ' ';
-      for (i = 0; i < len; ++i)
-    *str++ = *s++;
-      while (len < field_width--)
-    *str++ = ' ';
-      continue;
-
-    case 'p':
-      if (field_width == -1) {
-    field_width = 2*sizeof(void *);
-    flags |= ZEROPAD;
-      }
-      str = number(str,
-           (unsigned long) va_arg(args, void *), 16,
-           field_width, precision, flags);
-      continue;
-
-
-    case 'n':
-      if (qualifier == 'l') {
-    long * ip = va_arg(args, long *);
-    *ip = (str - buf);
-      } else {
-    int * ip = va_arg(args, int *);
-    *ip = (str - buf);
-      }
-      continue;
-
-    case '%':
-      *str++ = '%';
-      continue;
-
-      /* integer number formats - set up the flags and "break" */
-    case 'o':
-      base = 8;
-      break;
-
-    case 'X':
-      flags |= LARGE;
-    case 'x':
-      base = 16;
-      break;
-
-    case 'd':
-    case 'i':
-      flags |= SIGN;
-    case 'u':
-      break;
-
-    default:
-      *str++ = '%';
-      if (*fmt)
-    *str++ = *fmt;
-      else
-    --fmt;
-      continue;
-    }
-    if (qualifier == 'l')
-      num = va_arg(args, unsigned long);
-    else if (qualifier == 'h') {
-      num = (unsigned short) va_arg(args, int);
-      if (flags & SIGN)
-    num = (short) num;
-    } else if (flags & SIGN)
-      num = va_arg(args, int);
-    else
-      num = va_arg(args, unsigned int);
-    str = number(str, num, base, field_width, precision, flags);
-  }
-  *str = '\0';
-  return str-buf;
-}
-
-int sprintf(char * buf, const char *fmt, ...)
-{
-  va_list args;
-  int i;
-
-  va_start(args, fmt);
-  i=vsprintf(buf,fmt,args);
-  va_end(args);
-  return i;
-}
-
-int
-printf(const char *fmt, ...)
-{
-    char printf_buf[MAXBUF];
-    va_list args;
-    int printed;
-
-    va_start(args, fmt);
-    printed = vsprintf(printf_buf, fmt, args);
-    va_end(args);
-
-    printstring(printf_buf, printed);
-
-    return printed;
-}
-
-#undef putchar(x)
-//#define putchar(x) printchar(x)
-int putchar(int c)
-{
-    printchar(c);
     return 1;
 }
 
@@ -369,13 +41,244 @@ signed int puts(const char *pStr)
     signed int num = 0;
     while (*pStr != 0) {
 
-        printchar(*pStr++);
+        putchar(*pStr++);
         num++;
     }
     char c ='\n';
-    printchar(c);
+    putchar(c);
     return num;
 }
 
-/* --------------------------------- End Of File ------------------------------ */
+static void printchar(char **str, int c)
+{
+    if (str) {
+        **str = c;
+        ++(*str);
+    }
+    else (void)putchar(c);
+}
+
+#define PAD_RIGHT 1
+#define PAD_ZERO 2
+
+static int prints(char **out, const char *string, int width, int pad)
+{
+    register int pc = 0, padchar = ' ';
+
+    if (width > 0) {
+        register int len = 0;
+        register const char *ptr;
+        for (ptr = string; *ptr; ++ptr) ++len;
+        if (len >= width) width = 0;
+        else width -= len;
+        if (pad & PAD_ZERO) padchar = '0';
+    }
+    if (!(pad & PAD_RIGHT)) {
+        for ( ; width > 0; --width) {
+            printchar (out, padchar);
+            ++pc;
+        }
+    }
+    for ( ; *string ; ++string) {
+        printchar (out, *string);
+        ++pc;
+    }
+    for ( ; width > 0; --width) {
+        printchar (out, padchar);
+        ++pc;
+    }
+
+    return pc;
+}
+
+/* the following should be enough for 32 bit int */
+#define PRINT_BUF_LEN 12
+
+static int printi(char **out, int i, int b, int sg, int width, int pad, int letbase)
+{
+    char print_buf[PRINT_BUF_LEN];
+    register char *s;
+    register int t, neg = 0, pc = 0;
+    register unsigned int u = i;
+
+    if (i == 0) {
+        print_buf[0] = '0';
+        print_buf[1] = '\0';
+        return prints (out, print_buf, width, pad);
+    }
+
+    if (sg && b == 10 && i < 0) {
+        neg = 1;
+        u = -i;
+    }
+
+    s = print_buf + PRINT_BUF_LEN-1;
+    *s = '\0';
+
+    while (u) {
+        t = u % b;
+        if( t >= 10 )
+            t += letbase - '0' - 10;
+        *--s = t + '0';
+        u /= b;
+    }
+
+    if (neg) {
+        if( width && (pad & PAD_ZERO) ) {
+            printchar (out, '-');
+            ++pc;
+            --width;
+        }
+        else {
+            *--s = '-';
+        }
+    }
+
+    return pc + prints (out, s, width, pad);
+}
+
+static int print(char **out, int *varg)
+{
+    register int width, pad;
+    register int pc = 0;
+    register char *format = (char *)(*varg++);
+    char scr[2];
+
+    for (; *format != 0; ++format) {
+        if (*format == '%') {
+            ++format;
+            width = pad = 0;
+            if (*format == '\0') break;
+            if (*format == '%') goto out;
+            if (*format == '-') {
+                ++format;
+                pad = PAD_RIGHT;
+            }
+            while (*format == '0') {
+                ++format;
+                pad |= PAD_ZERO;
+            }
+            for ( ; *format >= '0' && *format <= '9'; ++format) {
+                width *= 10;
+                width += *format - '0';
+            }
+            if( *format == 's' ) {
+                register char *s = *((char **)varg++);
+                pc += prints (out, s?s:"(null)", width, pad);
+                continue;
+            }
+            if( *format == 'd' ) {
+                pc += printi (out, *varg++, 10, 1, width, pad, 'a');
+                continue;
+            }
+            if( *format == 'x' ) {
+                pc += printi (out, *varg++, 16, 0, width, pad, 'a');
+                continue;
+            }
+            if( *format == 'X' ) {
+                pc += printi (out, *varg++, 16, 0, width, pad, 'A');
+                continue;
+            }
+            if( *format == 'u' ) {
+                pc += printi (out, *varg++, 10, 0, width, pad, 'a');
+                continue;
+            }
+            if( *format == 'c' ) {
+                /* char are converted to int then pushed on the stack */
+                scr[0] = *varg++;
+                scr[1] = '\0';
+                pc += prints (out, scr, width, pad);
+                continue;
+            }
+        }
+        else {
+        out:
+            printchar (out, *format);
+            ++pc;
+        }
+    }
+    if (out) **out = '\0';
+    return pc;
+}
+
+/* assuming sizeof(void *) == sizeof(int) */
+
+int printf(const char *format, ...)
+{
+    register int *varg = (int *)(&format);
+    return print(0, varg);
+}
+
+int sprintf(char *out, const char *format, ...)
+{
+    register int *varg = (int *)(&format);
+    return print(&out, varg);
+}
+
+#ifdef TEST_PRINTF
+int main(void)
+{
+    char *ptr = "Hello world!";
+    char *np = 0;
+    int i = 5;
+    unsigned int bs = sizeof(int)*8;
+    int mi;
+    char buf[80];
+
+    mi = (1 << (bs-1)) + 1;
+    printf("%s\n", ptr);
+    printf("printf test\n");
+    printf("%s is null pointer\n", np);
+    printf("%d = 5\n", i);
+    printf("%d = - max int\n", mi);
+    printf("char %c = 'a'\n", 'a');
+    printf("hex %x = ff\n", 0xff);
+    printf("hex %02x = 00\n", 0);
+    printf("signed %d = unsigned %u = hex %x\n", -3, -3, -3);
+    printf("%d %s(s)%", 0, "message");
+    printf("\n");
+    printf("%d %s(s) with %%\n", 0, "message");
+    sprintf(buf, "justif: \"%-10s\"\n", "left"); printf("%s", buf);
+    sprintf(buf, "justif: \"%10s\"\n", "right"); printf("%s", buf);
+    sprintf(buf, " 3: %04d zero padded\n", 3); printf("%s", buf);
+    sprintf(buf, " 3: %-4d left justif.\n", 3); printf("%s", buf);
+    sprintf(buf, " 3: %4d right justif.\n", 3); printf("%s", buf);
+    sprintf(buf, "-3: %04d zero padded\n", -3); printf("%s", buf);
+    sprintf(buf, "-3: %-4d left justif.\n", -3); printf("%s", buf);
+    sprintf(buf, "-3: %4d right justif.\n", -3); printf("%s", buf);
+
+    return 0;
+}
+
+/*
+ * if you compile this file with
+ *   gcc -Wall $(YOUR_C_OPTIONS) -DTEST_PRINTF -c printf.c
+ * you will get a normal warning:
+ *   printf.c:214: warning: spurious trailing `%' in format
+ * this line is testing an invalid % at the end of the format string.
+ *
+ * this should display (on 32bit int machine) :
+ *
+ * Hello world!
+ * printf test
+ * (null) is null pointer
+ * 5 = 5
+ * -2147483647 = - max int
+ * char a = 'a'
+ * hex ff = ff
+ * hex 00 = 00
+ * signed -3 = unsigned 4294967293 = hex fffffffd
+ * 0 message(s)
+ * 0 message(s) with %
+ * justif: "left      "
+ * justif: "     right"
+ *  3: 0003 zero padded
+ *  3: 3    left justif.
+ *  3:    3 right justif.
+ * -3: -003 zero padded
+ * -3: -3   left justif.
+ * -3:   -3 right justif.
+ */
+
 #endif
+/* --------------------------------- End Of File ----------------------------*/
