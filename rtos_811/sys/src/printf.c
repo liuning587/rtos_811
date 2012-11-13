@@ -9,7 +9,9 @@
 #include <types.h>
 #include <ttylib.h>
 
-#undef putchar(x)
+#ifdef putchar
+    #undef putchar
+#endif
 int putchar(int c)
 {
 extern uint32_t consoleFd;
