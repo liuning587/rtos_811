@@ -1,6 +1,7 @@
 #include <sched.h>
 #include <leds.h>
 #include <string.h>
+#include <sys_gpio.h>
 
 /** 记录每个心跳毫秒数 */
 
@@ -79,7 +80,7 @@ usrAppInit(void)
     while (1)
     {
         ad = get_v();
-        if ((pre_ad < 600) && (ad >= 600))
+        if ((pre_ad < 570) && (ad >= 570))
         {
 //            printf("%d pre_ad:%d ad:%d", i++, pre_ad, ad);
             heart_tick = tickGet();
@@ -116,7 +117,13 @@ usrAppInit(void)
             }
 
             pre_tick = heart_tick;
+            sys_gpio_write(IO_LED2, E_LED_ON);
         }
+        else if ((ad < 570) && (pre_ad >= 570))
+        {
+            sys_gpio_write(IO_LED2, E_LED_OFF);
+        }
+
         pre_ad = ad;
         taskDelay(2);
     }
