@@ -219,6 +219,70 @@ void  sysHwInit ()
 {
     sysSerialHwInit2();
 }
+
+
+SEM_ID the_lock = NULL;
+uint32_t ADC_EndFlag = 0;
+
+// ADC采样序列0的中断函数
+void ADC_Sequence_0_ISR(void)
+{
+    unsigned long ulStatus;
+    ulStatus = ADCIntStatus(ADC_BASE, 0, true); // 读取中断状态
+    ADCIntClear(ADC_BASE, 0); // 清除中断状态，重要,等待下次AD中断
+    semGive(the_lock);
+//    if (ulStatus != 0) // 如果中断状态有效
+//    {
+//        ADC_EndFlag = 1; // 置位ADC采样结束标志
+//    }
+}
+//   ADC初始化
+void
+adc_init(void)
+{
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_ADC); //使能ADC模块
+    SysCtlADCSpeedSet(SYSCTL_ADCSPEED_500KSPS); //设置ADC采样速率
+    ADCSequenceDisable(ADC_BASE, 0); // 配置前先禁止采样序列
+
+    ADCSequenceConfigure(ADC_BASE, 0, ADC_TRIGGER_PROCESSOR, 0);
+    //配置ADC采样序列的触发事件和优先级：ADC基址，采样序列编号，触发事件，采样优先级
+    ADCSequenceStepConfigure(ADC_BASE, 0, 0,
+            ADC_CTL_END | ADC_CTL_CH0 | ADC_CTL_IE);
+
+    //配置ADC采样序列发生器的步进 ：ADC基址，采样序列编号，步值，通道设置
+
+    intConnect(INT_ADC0, ADC_Sequence_0_ISR, 0u);
+    ADCIntEnable(ADC_BASE, 0); //使能ADC采样序列的中断
+//    IntEnable(INT_ADC0); // 使能ADC采样序列中断
+    intEnable(INT_ADC0);
+    IntMasterEnable(); // 使能处理器中断
+
+    ADCSequenceEnable(ADC_BASE, 0); // 使能一个ADC采样序列
+    the_lock = semBCreate(0);
+//    printf("%x\n", the_lock);
+
+}
+
+uint32_t
+adc_get(void)
+{
+    unsigned long ulValue;
+    ADCProcessorTrigger(ADC_BASE, 0);
+    // 处理器触发采样序，调用ADCProcessorTrigger( )函数触发ADC采样
+//    while (!ADC_EndFlag)  // 等待采样结束
+//    {
+////        ;
+//        taskDelay(1);
+//    }
+    if (OK != semTake(the_lock, 1000))
+    {
+        return 0;
+    }
+    ADC_EndFlag = 0; // 清除ADC采样结束标志
+    ADCSequenceDataGet(ADC_BASE, 0, &ulValue); // 读取ADC转换结果
+    return (ulValue);
+}
+
 void sysHwInit2()
 {
     //gpio_init(true);
@@ -226,7 +290,6 @@ void sysHwInit2()
 #ifdef INCLUDE_DATAFLASH
     ftlInit();
 #endif
-
 
 }
 #if 0
